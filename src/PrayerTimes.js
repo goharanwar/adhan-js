@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+/* eslint-disable complexity */
 import SolarTime from './SolarTime';
 import TimeComponents from './TimeComponents';
 import Prayer from './Prayer';
@@ -28,10 +30,10 @@ export default class PrayerTimes {
 
         let fajrTime;
         let sunriseTime;
-        let ishraqTime;
+        let ishraqTime = "00:00";
         let dhuhrTime;
         let asrTime;
-        let asrMakruhTime;
+        let asrMakruhTime = "00:00";
         let maghribTime;
         let ishaTime;
 

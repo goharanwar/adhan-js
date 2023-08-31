@@ -1,9 +1,12 @@
 {
   "name": "namaz",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "High precision Islamic prayer time library for Pakistan and other countries",
   "main": "Adhan.js",
   "types": "Adhan.d.ts",
+  "watch": {
+    "build": "{src,test}/*"
+  },
   "scripts": {
     "build": "webpack --mode production",
     "test": "npm-run-all test:*",
@@ -13,7 +16,8 @@
     "test-watch": "jest --watch",
     "coverage": "codecov",
     "commit": "cz",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "watch": "npm-watch"
   },
   "repository": {
     "type": "git",
@@ -55,7 +59,8 @@
     "npm-run-all": "^4.1.5",
     "semantic-release": "^17.4.0",
     "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "npm-watch": "^0.11.0"
   },
   "config": {
     "commitizen": {

@@ -62,9 +62,10 @@ export class Coordinates {
 
 export class SunnahTimes {
   constructor(prayerTimes: PrayerTimes);
-  
+
   middleOfTheNight: Date;
   lastThirdOfTheNight: Date;
+  lastSixthOfTheNight: Date;
 }
 
 export enum Madhab {
