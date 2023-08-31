@@ -11,6 +11,7 @@ export default class SunnahTimes {
 
         this.middleOfTheNight = roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration / 2));
         this.lastThirdOfTheNight = roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (2 / 3)));
+        this.lastSixthOfTheNight = roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (5 / 6)));
     }
 }
 

@@ -4,8 +4,8 @@ import SolarCoordinates from './SolarCoordinates';
 
 export default class SolarTime {
     constructor(date, coordinates) {
-        const julianDay = Astronomical.julianDay(date.getFullYear(), date.getMonth() + 1, date.getDate(), 0);
 
+        const julianDay = Astronomical.julianDay(date.getFullYear(), date.getMonth() + 1, date.getDate(), 0);
         this.observer = coordinates;
         this.solar = new SolarCoordinates(julianDay);
 
@@ -15,23 +15,23 @@ export default class SolarTime {
         const m0 = Astronomical.approximateTransit(coordinates.longitude, this.solar.apparentSiderealTime, this.solar.rightAscension);
         const solarAltitude = -50.0 / 60.0;
 
-        this.approxTransit = m0;
+        this.approxTransit = m0
 
-        this.transit = Astronomical.correctedTransit(m0, coordinates.longitude, this.solar.apparentSiderealTime, 
+        this.transit = Astronomical.correctedTransit(m0, coordinates.longitude, this.solar.apparentSiderealTime,
             this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension);
 
-        this.sunrise = Astronomical.correctedHourAngle(m0, solarAltitude, coordinates, false, this.solar.apparentSiderealTime, 
-            this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension, 
+        this.sunrise = Astronomical.correctedHourAngle(m0, solarAltitude, coordinates, false, this.solar.apparentSiderealTime,
+            this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension,
             this.solar.declination, this.prevSolar.declination, this.nextSolar.declination);
 
-        this.sunset = Astronomical.correctedHourAngle(m0, solarAltitude, coordinates, true, this.solar.apparentSiderealTime, 
-            this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension, 
+        this.sunset = Astronomical.correctedHourAngle(m0, solarAltitude, coordinates, true, this.solar.apparentSiderealTime,
+            this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension,
             this.solar.declination, this.prevSolar.declination, this.nextSolar.declination);
     }
 
     hourAngle(angle, afterTransit) {
-        return Astronomical.correctedHourAngle(this.approxTransit, angle, this.observer, afterTransit, this.solar.apparentSiderealTime, 
-            this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension, 
+        return Astronomical.correctedHourAngle(this.approxTransit, angle, this.observer, afterTransit, this.solar.apparentSiderealTime,
+            this.solar.rightAscension, this.prevSolar.rightAscension, this.nextSolar.rightAscension,
             this.solar.declination, this.prevSolar.declination, this.nextSolar.declination);
     }
 

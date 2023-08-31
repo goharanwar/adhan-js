@@ -6,6 +6,8 @@ export default class CalculationParameters {
     constructor(methodName, fajrAngle, ishaAngle, ishaInterval, maghribAngle) {
         this.method = methodName || "Other";
         this.fajrAngle = fajrAngle || 0;
+        this.ishraqAngle = -1.4; //88.6; // Ishraq angle as per research of Hazrat Mufti Rashid Ahmed and Hazrat Syed Shabbir Ahmed KakaKhel (DBA). Only tested for Asian countries.
+        this.asrMakruhAngle = -2.3; // 87.7; // Asr Makrooh time angle as per research of Hazrat Mufti Rashid Ahmed and Hazrat Syed Shabbir Ahmed KakaKhel (DBA). Only tested for Asian countries.
         this.ishaAngle = ishaAngle || 0;
         this.ishaInterval = ishaInterval || 0;
         this.maghribAngle = maghribAngle;
@@ -25,7 +27,7 @@ export default class CalculationParameters {
             case HighLatitudeRule.TwilightAngle:
                 return { fajr: this.fajrAngle / 60, isha: this.ishaAngle / 60 };
             default:
-                throw(`Invalid high latitude rule found when attempting to compute night portions: ${this.highLatitudeRule}`);
+                throw (`Invalid high latitude rule found when attempting to compute night portions: ${this.highLatitudeRule}`);
         }
     }
 }
