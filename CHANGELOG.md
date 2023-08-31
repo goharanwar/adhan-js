@@ -1,3 +1,11 @@
+# [4.3.0](https://github.com/goharanwar/adhan-js/compare/v4.2.0...v4.3.0) (2023-08-31)
+
+
+### Features
+
+* **adjustments:** added Adhan.js and Adhan.js.map with new adjustments ([7f98005](https://github.com/goharanwar/adhan-js/commit/7f980058619aab140f9c8d330fa903aaa33a5f5f))
+* **adjustments:** added separate prayer start, end times, sehr iftar times with safe adjustments ([5fc57d7](https://github.com/goharanwar/adhan-js/commit/5fc57d7eac4838bf29f6dbf56b7937c50ab8efec))
+
 # [4.2.0](https://github.com/goharanwar/adhan-js/compare/v4.1.0...v4.2.0) (2021-04-05)
 
 
