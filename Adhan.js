@@ -660,6 +660,8 @@ const polarCircleResolvedValues = (resolver, date, coordinates) => {
   }
 };
 // CONCATENATED MODULE: ./src/PrayerTimes.js
+/* eslint-disable max-lines */
+/* eslint-disable complexity */
 
 
 
@@ -677,10 +679,10 @@ class PrayerTimes_PrayerTimes {
     let solarTime = new SolarTime_SolarTime(date, coordinates);
     let fajrTime;
     let sunriseTime;
-    let ishraqTime;
+    let ishraqTime = "00:00";
     let dhuhrTime;
     let asrTime;
-    let asrMakruhTime;
+    let asrMakruhTime = "00:00";
     let maghribTime;
     let ishaTime;
     let nightFraction;
