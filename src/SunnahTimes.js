@@ -2,16 +2,15 @@ import { dateByAddingDays, dateByAddingSeconds, roundedMinute } from './DateUtil
 import PrayerTimes from './PrayerTimes';
 
 export default class SunnahTimes {
-    constructor(prayerTimes) {
+    constructor(prayerTimes, precise = false) {
         const date = prayerTimes.date;
         const nextDay = dateByAddingDays(date, 1);
         const nextDayPrayerTimes = new PrayerTimes(prayerTimes.coordinates, nextDay, prayerTimes.calculationParameters, prayerTimes.precise);
 
         const nightDuration = (nextDayPrayerTimes.fajr.getTime() - prayerTimes.maghrib.getTime()) / 1000.0;
 
-        this.middleOfTheNight = roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration / 2));
-        this.lastThirdOfTheNight = roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (2 / 3)));
-        this.lastSixthOfTheNight = roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (5 / 6)));
+        this.middleOfTheNight = precise ? dateByAddingSeconds(prayerTimes.maghrib, nightDuration / 2) : roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration / 2));
+        this.lastThirdOfTheNight = precise ? dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (2 / 3)) : roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (2 / 3)));
+        this.lastSixthOfTheNight = precise ? dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (5 / 6)) : roundedMinute(dateByAddingSeconds(prayerTimes.maghrib, nightDuration * (5 / 6)));
     }
 }
-
