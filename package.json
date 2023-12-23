@@ -1,6 +1,6 @@
 {
   "name": "namaz",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "description": "High precision Islamic prayer time library for Pakistan and other countries",
   "main": "Adhan.js",
   "types": "Adhan.d.ts",

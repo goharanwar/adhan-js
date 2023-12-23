@@ -1,3 +1,10 @@
+# [4.4.0](https://github.com/goharanwar/adhan-js/compare/v4.3.0...v4.4.0) (2023-12-23)
+
+
+### Features
+
+* **sunnahtimes:** add support for precise Sunnah Times ([b5407c3](https://github.com/goharanwar/adhan-js/commit/b5407c3112d51ffeaf2dc0bb9fd688a26638dbf9))
+
 # [4.3.0](https://github.com/goharanwar/adhan-js/compare/v4.2.0...v4.3.0) (2023-08-31)
 
 
