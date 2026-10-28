@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 /* eslint-disable complexity */
 import SolarTime from './SolarTime';
+import SolarDisc from './SolarDisc';
 import TimeComponents from './TimeComponents';
 import Prayer from './Prayer';
 import Astronomical from './Astronomical';
@@ -25,6 +26,12 @@ export default class PrayerTimes {
         this.date = date;
         this.calculationParameters = calculationParameters;
         this.precise = precise || false;
+
+        const ihtiyat = calculationParameters.ihtiyat;
+        if (typeof ihtiyat !== 'undefined' &&
+            (typeof ihtiyat !== 'number' || !Number.isFinite(ihtiyat) || ihtiyat < 0)) {
+            throw new RangeError('ihtiyat must be a finite non-negative number of minutes');
+        }
 
         let solarTime = new SolarTime(date, coordinates);
 
@@ -176,7 +183,6 @@ export default class PrayerTimes {
             this.maghribEnd = dateByAddingMinutes(ishaPrecise, -1);
             this.isha = ishaPrecise;
             this.ishaAzan = dateByAddingMinutes(ishaPrecise, +1);
-            this.ishaEnd = this.sehriEnd; // TODO: Verify if this shows the time for next day's sehri
         } else {
 
 
@@ -199,9 +205,46 @@ export default class PrayerTimes {
             this.maghribEnd = dateByAddingMinutes(ishaRounded, -1);
             this.isha = ishaRounded;
             this.ishaAzan = dateByAddingMinutes(ishaRounded, +1);
-            this.ishaEnd = this.sehriEnd; // TODO: Verify if this shows the time for next day's sehri
         }
 
+        // Explicit opt-in: ihtiyat replaces Dhuhr method/user adjustments for
+        // this raw-transit-centred window. Undefined retains legacy behaviour.
+        if (typeof ihtiyat !== 'undefined') {
+            const julianDay = Astronomical.julianDay(
+                date.getFullYear(), date.getMonth() + 1, date.getDate(), 12);
+            const padding = SolarDisc.zawalHalfWidthSeconds(julianDay) + ihtiyat * 60;
+            // Preserve nearest-minute policy and its existing position before
+            // the disc correction; display rounding is not changed here.
+            const transit = precise ? dhuhrTime : roundedMinute(dhuhrTime);
+            this.zawal = dateByAddingSeconds(transit, -padding);
+            this.dhuhr = dateByAddingSeconds(transit, padding);
+            this.dhuhrAzan = dateByAddingMinutes(this.dhuhr, 1);
+        }
+        this.zawalEnd = this.dhuhr;
+
+        // A night's Isha ends at the following civil day's Sehri, not today's.
+        // Defer that calculation so constructing the next day cannot recurse.
+        // Keep the existing own/enumerable/writable property API for callers.
+        const nextDate = dateByAddingDays(this.date, 1);
+        const nextCoordinates = { ...this.coordinates };
+        const nextParameters = Object.assign(
+            Object.create(Object.getPrototypeOf(calculationParameters)), calculationParameters,
+            { adjustments: { ...calculationParameters.adjustments },
+                methodAdjustments: { ...calculationParameters.methodAdjustments } });
+        const setIshaEnd = value => Object.defineProperty(this, 'ishaEnd', {
+            value, writable: true, enumerable: true, configurable: true
+        });
+        Object.defineProperty(this, 'ishaEnd', {
+            enumerable: true,
+            configurable: true,
+            get: () => {
+                const nextDay = new PrayerTimes(nextCoordinates, nextDate, nextParameters, this.precise);
+                const value = nextDay.sehriEnd;
+                setIshaEnd(value);
+                return value;
+            },
+            set: setIshaEnd
+        });
     }
 
     timeForPrayer(prayer) {
@@ -262,7 +305,7 @@ export default class PrayerTimes {
         else if (prayer === Prayer.IshaAzan) {
             return this.ishaAzan;
         }
-        else if (prayer === Prayer.IshaEnd) { // TODO: Verify if this shows the time for next day's sehri/isha end or if we want to show next days time
+        else if (prayer === Prayer.IshaEnd) {
             return this.ishaEnd;
         }
         else {

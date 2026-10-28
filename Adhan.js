@@ -525,6 +525,82 @@ class SolarTime_SolarTime {
     return this.hourAngle(angle, true);
   }
 }
+// CONCATENATED MODULE: ./src/SolarDisc.js
+// src/SolarDisc.js — add to goharanwar/adhan-js ("namaz")
+//
+// True half-width of the zawal window: the time from the solar disc's leading
+// limb touching the local meridian to the disc centre reaching it.
+//
+//     sin(H½) = sin(s) / cos(δ)        s = apparent semi-diameter of the Sun
+//     t½      = H½ / ω                 ω = dH/dt, the rate the hour angle changes
+//
+// Latitude does not appear. The angular distance from a point at (δ, H) to the
+// meridian great circle is  sin d = cos δ · sin H,  which carries no φ term, so
+// the disc takes exactly as long to cross the meridian in Karachi as in Tromsø
+// on the same date. What does vary is the Sun's distance (perihelion/aphelion,
+// which changes s) and its declination.
+
+
+
+
+
+// apparent sidereal time advances 360.98564736629° per day
+const SIDEREAL_DEGREES_PER_HOUR = 360.98564736629 / 24;
+
+// Meeus: the Sun's apparent semi-diameter is 959.63 arcseconds at 1 AU
+const SOLAR_SEMI_DIAMETER_ARCSEC_AT_1AU = 959.63;
+const SolarDisc = {
+  /**
+   * Earth–Sun distance in astronomical units. Meeus, Astronomical Algorithms
+   * eq. 25.5 — the same expression the Khanqah workbook uses in SDSN!N3.
+   */
+  radiusVector(julianCentury) {
+    const T = julianCentury;
+    const M = src_Astronomical.meanSolarAnomaly(T);
+    const C = src_Astronomical.solarEquationOfTheCenter(T, M);
+    const trueAnomaly = M + C;
+    const eccentricity = 0.016708634 - T * (0.000042037 + 0.0000001267 * T);
+    return 1.000001018 * (1 - eccentricity * eccentricity) / (1 + eccentricity * Math.cos(degreesToRadians(trueAnomaly)));
+  },
+  /** Apparent semi-diameter of the Sun, in degrees. */
+  semiDiameter(julianCentury) {
+    return SOLAR_SEMI_DIAMETER_ARCSEC_AT_1AU / SolarDisc.radiusVector(julianCentury) / 3600;
+  },
+  /**
+   * dH/dt in degrees per hour. The Sun's own eastward drift in right ascension
+   * is subtracted from the sidereal rate; that drift is not constant — it is
+   * what produces the equation of time — so it is differentiated numerically
+   * rather than assumed, which is why this is not simply 15.
+   *
+   * Using a flat 15 instead changes the result by at most 0.025 s, so this
+   * refinement can be dropped if a caller wants fewer SolarCoordinates builds.
+   */
+  hourAngleRate(julianDay) {
+    const step = 0.5 / 24; // half an hour, in days
+    const before = new SolarCoordinates_SolarCoordinates(julianDay - step).rightAscension;
+    const after = new SolarCoordinates_SolarCoordinates(julianDay + step).rightAscension;
+    let delta = after - before;
+    if (delta > 180) {
+      delta -= 360;
+    }
+    if (delta < -180) {
+      delta += 360;
+    }
+    return SIDEREAL_DEGREES_PER_HOUR - delta / (2 * step * 24);
+  },
+  /**
+   * Half the time the solar disc takes to cross the local meridian, in seconds.
+   * Ranges from about 63.7 s (mid-September) to 70.9 s (late December).
+   */
+  zawalHalfWidthSeconds(julianDay) {
+    const T = src_Astronomical.julianCentury(julianDay);
+    const semiDiameter = degreesToRadians(SolarDisc.semiDiameter(T));
+    const declination = degreesToRadians(new SolarCoordinates_SolarCoordinates(julianDay).declination);
+    const halfWidthDegrees = radiansToDegrees(Math.asin(Math.sin(semiDiameter) / Math.cos(declination)));
+    return halfWidthDegrees / SolarDisc.hourAngleRate(julianDay) * 3600;
+  }
+};
+/* harmony default export */ var src_SolarDisc = (SolarDisc);
 // CONCATENATED MODULE: ./src/TimeComponents.js
 class TimeComponents {
   constructor(number) {
@@ -669,6 +745,7 @@ const polarCircleResolvedValues = (resolver, date, coordinates) => {
 
 
 
+
 class PrayerTimes_PrayerTimes {
   // eslint-disable-next-line complexity
   constructor(coordinates, date, calculationParameters, precise) {
@@ -676,6 +753,10 @@ class PrayerTimes_PrayerTimes {
     this.date = date;
     this.calculationParameters = calculationParameters;
     this.precise = precise || false;
+    const ihtiyat = calculationParameters.ihtiyat;
+    if (typeof ihtiyat !== 'undefined' && (typeof ihtiyat !== 'number' || !Number.isFinite(ihtiyat) || ihtiyat < 0)) {
+      throw new RangeError('ihtiyat must be a finite non-negative number of minutes');
+    }
     let solarTime = new SolarTime_SolarTime(date, coordinates);
     let fajrTime;
     let sunriseTime;
@@ -804,7 +885,6 @@ class PrayerTimes_PrayerTimes {
       this.maghribEnd = dateByAddingMinutes(ishaPrecise, -1);
       this.isha = ishaPrecise;
       this.ishaAzan = dateByAddingMinutes(ishaPrecise, +1);
-      this.ishaEnd = this.sehriEnd; // TODO: Verify if this shows the time for next day's sehri
     } else {
       this.sehriEnd = dateByAddingMinutes(fajrRounded, -1);
       this.fajr = fajrRounded;
@@ -825,10 +905,55 @@ class PrayerTimes_PrayerTimes {
       this.maghribEnd = dateByAddingMinutes(ishaRounded, -1);
       this.isha = ishaRounded;
       this.ishaAzan = dateByAddingMinutes(ishaRounded, +1);
-      this.ishaEnd = this.sehriEnd; // TODO: Verify if this shows the time for next day's sehri
     }
-  }
 
+    // Explicit opt-in: ihtiyat replaces Dhuhr method/user adjustments for
+    // this raw-transit-centred window. Undefined retains legacy behaviour.
+    if (typeof ihtiyat !== 'undefined') {
+      const julianDay = src_Astronomical.julianDay(date.getFullYear(), date.getMonth() + 1, date.getDate(), 12);
+      const padding = src_SolarDisc.zawalHalfWidthSeconds(julianDay) + ihtiyat * 60;
+      // Preserve nearest-minute policy and its existing position before
+      // the disc correction; display rounding is not changed here.
+      const transit = precise ? dhuhrTime : roundedMinute(dhuhrTime);
+      this.zawal = dateByAddingSeconds(transit, -padding);
+      this.dhuhr = dateByAddingSeconds(transit, padding);
+      this.dhuhrAzan = dateByAddingMinutes(this.dhuhr, 1);
+    }
+    this.zawalEnd = this.dhuhr;
+
+    // A night's Isha ends at the following civil day's Sehri, not today's.
+    // Defer that calculation so constructing the next day cannot recurse.
+    // Keep the existing own/enumerable/writable property API for callers.
+    const nextDate = dateByAddingDays(this.date, 1);
+    const nextCoordinates = {
+      ...this.coordinates
+    };
+    const nextParameters = Object.assign(Object.create(Object.getPrototypeOf(calculationParameters)), calculationParameters, {
+      adjustments: {
+        ...calculationParameters.adjustments
+      },
+      methodAdjustments: {
+        ...calculationParameters.methodAdjustments
+      }
+    });
+    const setIshaEnd = value => Object.defineProperty(this, 'ishaEnd', {
+      value,
+      writable: true,
+      enumerable: true,
+      configurable: true
+    });
+    Object.defineProperty(this, 'ishaEnd', {
+      enumerable: true,
+      configurable: true,
+      get: () => {
+        const nextDay = new PrayerTimes_PrayerTimes(nextCoordinates, nextDate, nextParameters, this.precise);
+        const value = nextDay.sehriEnd;
+        setIshaEnd(value);
+        return value;
+      },
+      set: setIshaEnd
+    });
+  }
   timeForPrayer(prayer) {
     if (prayer === src_Prayer.SehriEnd) {
       return this.sehriEnd;
@@ -869,7 +994,6 @@ class PrayerTimes_PrayerTimes {
     } else if (prayer === src_Prayer.IshaAzan) {
       return this.ishaAzan;
     } else if (prayer === src_Prayer.IshaEnd) {
-      // TODO: Verify if this shows the time for next day's sehri/isha end or if we want to show next days time
       return this.ishaEnd;
     } else {
       return null;
@@ -965,6 +1089,9 @@ const HighLatitudeRule = {
 class CalculationParameters_CalculationParameters {
   constructor(methodName, fajrAngle, ishaAngle, ishaInterval, maghribAngle) {
     this.method = methodName || "Other";
+    // Optional minutes of caution around the solar-disc meridian crossing.
+    // Explicit 0 is supported; undefined retains legacy Dhuhr adjustments.
+    this.ihtiyat = undefined;
     this.fajrAngle = fajrAngle || 0;
     this.ishraqAngle = -1.4; //88.6; // Ishraq angle as per research of Hazrat Mufti Rashid Ahmed and Hazrat Syed Shabbir Ahmed KakaKhel (DBA). Only tested for Asian countries.
     this.asrMakruhAngle = -2.3; // 87.7; // Asr Makrooh time angle as per research of Hazrat Mufti Rashid Ahmed and Hazrat Syed Shabbir Ahmed KakaKhel (DBA). Only tested for Asian countries.
