@@ -5,6 +5,9 @@ import { PolarCircleResolution } from './PolarCircleResolution';
 export default class CalculationParameters {
     constructor(methodName, fajrAngle, ishaAngle, ishaInterval, maghribAngle) {
         this.method = methodName || "Other";
+        // Optional minutes of caution around the solar-disc meridian crossing.
+        // Explicit 0 is supported; undefined retains legacy Dhuhr adjustments.
+        this.ihtiyat = undefined;
         this.fajrAngle = fajrAngle || 0;
         this.ishraqAngle = -1.4; //88.6; // Ishraq angle as per research of Hazrat Mufti Rashid Ahmed and Hazrat Syed Shabbir Ahmed KakaKhel (DBA). Only tested for Asian countries.
         this.asrMakruhAngle = -2.3; // 87.7; // Asr Makrooh time angle as per research of Hazrat Mufti Rashid Ahmed and Hazrat Syed Shabbir Ahmed KakaKhel (DBA). Only tested for Asian countries.

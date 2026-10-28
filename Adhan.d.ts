@@ -1,11 +1,16 @@
 export as namespace adhan;
 
 export class PrayerTimes {
-  constructor(coordinates: Coordinates, date: Date, params: CalculationParameters);
+  constructor(coordinates: Coordinates, date: Date, params: CalculationParameters, precise?: boolean);
 
   fajr: Date;
   sunrise: Date;
   dhuhr: Date;
+  zawal: Date;
+  zawalEnd: Date;
+  dhuhrAzan: Date;
+  ishaEnd: Date;
+  sehriEnd: Date;
   asr: Date;
   maghrib: Date;
   isha: Date;
@@ -19,6 +24,8 @@ export class CalculationParameters {
   constructor(fajrAngle: number, ishaAngle: number, methodName?: string, ishaInterval?: number, maghribAngle?: number)
 
   readonly method: string;
+  /** Minutes of caution; when set, replaces Dhuhr adjustments with a raw-transit symmetric window. */
+  ihtiyat?: number;
   fajrAngle: number;
   ishaAngle: number;
   ishaInterval: number;
